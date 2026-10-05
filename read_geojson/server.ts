@@ -1,5 +1,5 @@
 import geojson from './reader';
-import classifyByGeometry from './immigration/check';
+import classifyByGeometry from './util/check';
 
 const classifiedFeatures = classifyByGeometry(geojson);
 
