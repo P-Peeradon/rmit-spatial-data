@@ -10,4 +10,6 @@ Object.entries(classifiedFeatures).forEach(([geometryType, features]) => {
 
 const roadWay = classifyTransportPath(classifiedFeatures);
 
-writeJsonFile(classifiedFeatures, "")
+writeJsonFile(classifiedFeatures, "geometry");
+
+process.exit(0)
