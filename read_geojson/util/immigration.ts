@@ -7,6 +7,19 @@ export interface ClassifiedFeatures {
     '2D': Feature[]; // Polygons, MultiPolygons
 }
 
+function isClassifiedFeatures(obj: unknown): obj is ClassifiedFeatures {
+    return (
+        obj !== null &&
+        typeof obj === "object" &&
+        '0D' in obj &&
+        '1D' in obj &&
+        '2D' in obj &&
+        Array.isArray((obj as ClassifiedFeatures)['0D']) &&
+        Array.isArray((obj as ClassifiedFeatures)['1D']) &&
+        Array.isArray((obj as ClassifiedFeatures)['2D'])
+    );
+}
+
 export function classifyByGeometry(features: FeatureCollection): ClassifiedFeatures {
     const bucket: ClassifiedFeatures = {
         '0D': [],
@@ -41,6 +54,7 @@ export function classifyByGeometry(features: FeatureCollection): ClassifiedFeatu
 export function classifyTransportPath(features: FeatureCollection | ClassifiedFeatures | Feature[]): Record<string, Feature[]> {
     const bucket: Record<string, Feature[]> = {};
     let featureList: Feature[] = [];
+    let filteredFeature: Feature[] = [];
 
     // We have two cases: either the input is a FeatureCollection or an array of Features. We need to handle both.
     // If it's a FeatureCollection, we extract the features array; if it's already an array, we use it directly.
@@ -48,24 +62,71 @@ export function classifyTransportPath(features: FeatureCollection | ClassifiedFe
         console.warn('No features provided for transport classification.');
         return bucket;
     } else if (features instanceof Object && 'type' in features && features.type === 'FeatureCollection') {
-        featureList = features.features;
-    } else if (features instanceof Object) {
-
+        featureList = features.features.filter(feature => 
+            feature.geometry.type === 'LineString' || feature.geometry.type === 'MultiLineString'
+        );
+    } else if (features instanceof Object && isClassifiedFeatures(features)) {
+        featureList = features["1D"];
     } else {
         featureList = Array.isArray(features) ? features : [];
     }
 
-    // filter for only LineString and MultiLineString features
-    // Actually, we need some attribute to classify them as transport paths. For now, we will just filter by geometry type.
-    const filteredFeatures = featureList.filter(feature => 
-        feature.geometry.type === 'LineString' || feature.geometry.type === 'MultiLineString'
-    );
+    filteredFeature = featureList.filter((feature: Feature) => !(feature.properties?.highway && feature.properties?.railway) && 
+                            (feature.properties?.highway || feature.properties?.railway));
 
-    // For data exported from OpenStreetMap, we can classify transport paths based on the 'highway' property in the feature's properties.
-    // For road, Highway is not null and for railway, Railway is not null.
-    filteredFeatures.forEach(feature => {
-        const highwayType = feature.properties?.highway ?? 'unknown';
-        bucket[highwayType].push(feature)
+    console.log(filteredFeature);
+
+    filteredFeature.forEach((feature: Feature) => {
+        switch (feature.properties?.highway.toLowerCase()) {
+            case 'motorway':
+                bucket['freeway'].push(feature);
+                break;
+
+            case 'primary':
+            case 'secondary':
+            case 'tertiary':
+                bucket['urban'].push(feature)
+                break;
+
+            case 'residential':
+            case 'service':
+                bucket['municipal'].push(feature);
+                break;
+
+            case 'footway':
+            case 'pedestrian':
+                bucket['footpath'].push(feature);
+                break;
+
+            case 'cycleway':
+                bucket['cycling'].push(feature);
+                break;
+
+            case 'construction':
+            case 'proposed':
+                bucket['future'].push(feature);
+                break;
+
+            case 'unclassified':
+            default:
+                if (!feature.properties?.railway)
+                    bucket['unknown'].push(feature);
+                break;      
+        }
+
+        switch (feature.properties?.railway.toLowerCase()) {
+            case 'train':
+            case 'subway':
+                bucket['metro'].push(feature);
+                break;
+            
+            case 'tram':
+                bucket['tram'].push(feature);
+                break;
+
+            default:
+                break;
+        }
     });
 
     return bucket;
