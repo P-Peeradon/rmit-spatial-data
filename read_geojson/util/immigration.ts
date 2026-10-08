@@ -135,7 +135,7 @@ export function classifyTransportPath(features: FeatureCollection | ClassifiedFe
                 break;      
         }
 
-        switch (feature.properties?.railway.toLowerCase()) {
+        switch (feature.properties?.railway) {
             case 'train':
             case 'subway':
                 bucket['metro'].push(feature);
