@@ -77,7 +77,7 @@ export function classifyTransportPath(features: FeatureCollection | ClassifiedFe
     console.log(filteredFeature);
 
     filteredFeature.forEach((feature: Feature) => {
-        switch (feature.properties?.highway.toLowerCase()) {
+        switch (feature.properties?.highway) {
             case 'motorway':
                 if (!bucket['freeway'])
                     bucket['freeway'] = [];
