@@ -79,36 +79,57 @@ export function classifyTransportPath(features: FeatureCollection | ClassifiedFe
     filteredFeature.forEach((feature: Feature) => {
         switch (feature.properties?.highway.toLowerCase()) {
             case 'motorway':
+                if (!bucket['freeway'])
+                    bucket['freeway'] = [];
+
                 bucket['freeway'].push(feature);
                 break;
 
             case 'primary':
             case 'secondary':
             case 'tertiary':
+                if (!bucket['urban'])
+                    bucket['urban'] = [];
+
                 bucket['urban'].push(feature)
                 break;
 
             case 'residential':
             case 'service':
+                if (!bucket['municipal'])
+                    bucket['municipal'] = [];
+
                 bucket['municipal'].push(feature);
                 break;
 
             case 'footway':
             case 'pedestrian':
+                if (!bucket['footpath'])
+                    bucket['footpath'] = [];
+
                 bucket['footpath'].push(feature);
                 break;
 
             case 'cycleway':
+                if (!bucket['cycling'])
+                    bucket['cycling'] = [];
+
                 bucket['cycling'].push(feature);
                 break;
 
             case 'construction':
             case 'proposed':
+                if (!bucket['future'])
+                    bucket['future'] = [];
+
                 bucket['future'].push(feature);
                 break;
 
             case 'unclassified':
             default:
+                if (!bucket['unknown'])
+                    bucket['unknown'] = [];
+                
                 if (!feature.properties?.railway)
                     bucket['unknown'].push(feature);
                 break;      
