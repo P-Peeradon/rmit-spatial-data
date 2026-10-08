@@ -138,10 +138,16 @@ export function classifyTransportPath(features: FeatureCollection | ClassifiedFe
         switch (feature.properties?.railway) {
             case 'train':
             case 'subway':
+                if (!bucket['metro'])
+                    bucket['metro'] = [];
+                
                 bucket['metro'].push(feature);
                 break;
             
             case 'tram':
+                if (!bucket['tram'])
+                    bucket['tram'] = [];
+                
                 bucket['tram'].push(feature);
                 break;
 
