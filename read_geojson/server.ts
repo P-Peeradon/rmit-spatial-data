@@ -1,6 +1,6 @@
-import geojson from './reader';
+import geojson from './util/reader';
 import classifyByGeometry, { classifyTransportPath } from './util/immigration';
-import writeJsonFile from './writer';
+import writeJsonFile from './util/writer';
 
 const classifiedFeatures = classifyByGeometry(geojson);
 
